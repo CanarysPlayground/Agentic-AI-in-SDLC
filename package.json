@@ -1,0 +1,24 @@
+{
+  "name": "incident-management-system",
+  "version": "1.0.0",
+  "description": "Incident Management System with Dashboard",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "client": "cd frontend && npm start",
+    "install-all": "npm install && cd frontend && npm install"
+  },
+  "keywords": ["incident", "management", "dashboard"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
