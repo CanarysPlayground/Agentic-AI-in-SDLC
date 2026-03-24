@@ -1,0 +1,75 @@
+.stats-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s;
+  border-left: 4px solid #007bff;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-open {
+  border-left-color: #007bff;
+}
+
+.status-open .stat-value {
+  color: #007bff;
+}
+
+.status-in-progress {
+  border-left-color: #ffc107;
+}
+
+.status-in-progress .stat-value {
+  color: #ffc107;
+}
+
+.status-resolved {
+  border-left-color: #28a745;
+}
+
+.status-resolved .stat-value {
+  color: #28a745;
+}
+
+.priority-critical {
+  border-left-color: #dc3545;
+}
+
+.priority-critical .stat-value {
+  color: #dc3545;
+}
+
+.priority-high {
+  border-left-color: #ff6b6b;
+}
+
+.priority-high .stat-value {
+  color: #ff6b6b;
+}

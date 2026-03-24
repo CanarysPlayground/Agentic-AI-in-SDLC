@@ -1,0 +1,128 @@
+.incident-list {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.incident-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.incident-table thead {
+  background: #f8f9fa;
+}
+
+.incident-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.incident-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.incident-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.incident-table td {
+  padding: 15px;
+  font-size: 14px;
+  color: #555;
+}
+
+.incident-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.incident-date {
+  color: #888;
+  font-size: 13px;
+}
+
+.incident-actions {
+  text-align: right;
+}
+
+.status-badge,
+.priority-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.status-open {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-badge.status-in-progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.status-resolved {
+  background: #d1e7dd;
+  color: #0a3622;
+}
+
+.status-badge.status-closed {
+  background: #e2e3e5;
+  color: #41464b;
+}
+
+.priority-badge.priority-critical {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.priority-badge.priority-high {
+  background: #ffe5e5;
+  color: #cc0000;
+}
+
+.priority-badge.priority-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.priority-badge.priority-low {
+  background: #d1e7dd;
+  color: #0a3622;
+}
+
+.no-incidents {
+  padding: 60px;
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .incident-table {
+    font-size: 12px;
+  }
+  
+  .incident-table th,
+  .incident-table td {
+    padding: 10px 8px;
+  }
+  
+  .incident-date {
+    display: none;
+  }
+}
