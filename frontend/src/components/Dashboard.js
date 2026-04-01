@@ -6,7 +6,7 @@ import IncidentModal from './IncidentModal';
 import StatsPanel from './StatsPanel';
 import './Dashboard.css';
 
-const Dashboard = () => {
+const Dashboard = ({ user, onLogout }) => {
   const [incidents, setIncidents] = useState([]);
   const [stats, setStats] = useState(null);
   const [filters, setFilters] = useState({
@@ -108,9 +108,19 @@ const Dashboard = () => {
     <div className="dashboard">
       <header className="dashboard-header">
         <h1>Incident Management Dashboard</h1>
-        <button className="btn btn-primary" onClick={handleCreateIncident}>
-          Create New Incident
-        </button>
+        <div className="dashboard-header-actions">
+          {user && (
+            <span className="dashboard-user">Welcome, <strong>{user.username}</strong></span>
+          )}
+          <button className="btn btn-primary" onClick={handleCreateIncident}>
+            Create New Incident
+          </button>
+          {onLogout && (
+            <button className="btn btn-secondary" onClick={onLogout}>
+              Logout
+            </button>
+          )}
+        </div>
       </header>
 
       {stats && <StatsPanel stats={stats} />}

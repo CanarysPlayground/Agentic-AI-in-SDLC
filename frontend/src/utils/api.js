@@ -1,5 +1,36 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
+export const login = async (username, password) => {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Login failed');
+  }
+  return response.json();
+};
+
+export const register = async (username, email, password) => {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Registration failed');
+  }
+  return response.json();
+};
+
 export const fetchIncidents = async (filters = {}) => {
   const params = new URLSearchParams();
   
@@ -8,7 +39,7 @@ export const fetchIncidents = async (filters = {}) => {
   if (filters.assignee) params.append('assignee', filters.assignee);
   
   const url = `${API_BASE_URL}/incidents?${params.toString()}`;
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: getAuthHeaders() });
   
   if (!response.ok) {
     throw new Error('Failed to fetch incidents');
@@ -18,7 +49,7 @@ export const fetchIncidents = async (filters = {}) => {
 };
 
 export const fetchIncidentById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/incidents/${id}`);
+  const response = await fetch(`${API_BASE_URL}/incidents/${id}`, { headers: getAuthHeaders() });
   
   if (!response.ok) {
     throw new Error('Failed to fetch incident');
@@ -32,6 +63,7 @@ export const createIncident = async (incidentData) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: JSON.stringify(incidentData),
   });
@@ -48,6 +80,7 @@ export const updateIncident = async (id, incidentData) => {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: JSON.stringify(incidentData),
   });
@@ -62,6 +95,7 @@ export const updateIncident = async (id, incidentData) => {
 export const deleteIncident = async (id) => {
   const response = await fetch(`${API_BASE_URL}/incidents/${id}`, {
     method: 'DELETE',
+    headers: getAuthHeaders(),
   });
   
   if (!response.ok) {
@@ -72,7 +106,7 @@ export const deleteIncident = async (id) => {
 };
 
 export const fetchStats = async () => {
-  const response = await fetch(`${API_BASE_URL}/incidents/stats/summary`);
+  const response = await fetch(`${API_BASE_URL}/incidents/stats/summary`, { headers: getAuthHeaders() });
   
   if (!response.ok) {
     throw new Error('Failed to fetch stats');
