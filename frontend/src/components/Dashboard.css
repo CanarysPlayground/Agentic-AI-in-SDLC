@@ -21,6 +21,17 @@
   font-size: 28px;
 }
 
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-user {
+  font-size: 14px;
+  color: #555;
+}
+
 .dashboard-content {
   display: flex;
   flex-direction: column;
