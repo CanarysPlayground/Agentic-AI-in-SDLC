@@ -1,6 +1,6 @@
 # Incident Management System
 
-A full-stack incident management system with a React frontend dashboard and Node.js/Express backend API.
+A full-stack incident management system with a React frontend dashboard and Node.js/Express backend API, featuring **Role-Based Access Control (RBAC)**.
 
 ## Features
 
@@ -11,8 +11,10 @@ A full-stack incident management system with a React frontend dashboard and Node
 - Filtering by status, priority, and assignee
 - Real-time statistics endpoint
 - Sample incident data for testing
+- **JWT authentication** with role-based authorization
 
 ### Frontend Dashboard
+- **Login screen** with demo account hints
 - **Modern React UI** with responsive design
 - **Incident List View** with sortable columns
 - **Advanced Filtering**:
@@ -23,30 +25,59 @@ A full-stack incident management system with a React frontend dashboard and Node
   - Visual status badges
   - Priority indicators
   - Real-time statistics panel
-- **Full Incident Management**:
-  - Create new incidents
-  - View incident details
-  - Edit existing incidents
-  - Delete incidents
+- **Full Incident Management** (role-dependent):
+  - Create new incidents *(admin, manager)*
+  - View incident details *(all roles)*
+  - Edit existing incidents *(admin, manager)*
+  - Delete incidents *(admin only)*
+- **User info & role badge** in the header
 - **Responsive Design** - works on desktop, tablet, and mobile
+
+## Role-Based Access Control (RBAC)
+
+The system enforces three roles:
+
+| Role | View Incidents | Create | Edit | Delete |
+|------|---------------|--------|------|--------|
+| **admin** | ✅ | ✅ | ✅ | ✅ |
+| **manager** | ✅ | ✅ | ✅ | ❌ |
+| **viewer** | ✅ | ❌ | ❌ | ❌ |
+
+### Demo Accounts
+
+| Username | Password | Role |
+|----------|----------|------|
+| `admin` | `admin123` | admin |
+| `manager1` | `manager123` | manager |
+| `viewer1` | `viewer123` | viewer |
+
+The admin username and password can be overridden via the `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables. Set `JWT_SECRET` in production.
+
+### How It Works
+
+1. The user submits credentials to `POST /api/auth/login` and receives a JWT token.
+2. Every subsequent API call includes the token as `Authorization: Bearer <token>`.
+3. The backend `authenticate` middleware verifies the token; the `authorize` middleware checks the role.
+4. The React frontend reads the user's role from the token response and shows/hides action buttons accordingly.
 
 ## Project Structure
 
 ```
 incident-management-system/
 ├── backend/
-│   └── server.js          # Express API server
+│   └── server.js          # Express API server (auth + RBAC + incidents)
 ├── frontend/
 │   ├── src/
 │   │   ├── components/    # React components
-│   │   │   ├── Dashboard.js
+│   │   │   ├── Dashboard.js      # Role-aware dashboard
+│   │   │   ├── Login.js          # Login screen
 │   │   │   ├── IncidentList.js
 │   │   │   ├── IncidentFilters.js
 │   │   │   ├── IncidentModal.js
 │   │   │   ├── StatsPanel.js
 │   │   │   └── *.css      # Component styles
 │   │   ├── utils/
-│   │   │   └── api.js     # API client functions
+│   │   │   └── api.js     # API client (with JWT support)
 │   │   ├── App.js
 │   │   └── index.js
 │   └── package.json
@@ -107,21 +138,32 @@ npm run install-all
 
 ## API Endpoints
 
+All incident endpoints require a valid JWT token in the `Authorization: Bearer <token>` header.
+
+### Authentication
+- `POST /api/auth/login` - Login and receive a JWT token
+- `GET /api/auth/me` - Get current authenticated user info
+
 ### Incidents
-- `GET /api/incidents` - Get all incidents (supports filtering)
+- `GET /api/incidents` - Get all incidents (supports filtering) — *all roles*
   - Query params: `status`, `priority`, `assignee`
-- `GET /api/incidents/:id` - Get a specific incident
-- `POST /api/incidents` - Create a new incident
-- `PUT /api/incidents/:id` - Update an incident
-- `DELETE /api/incidents/:id` - Delete an incident
+- `GET /api/incidents/:id` - Get a specific incident — *all roles*
+- `POST /api/incidents` - Create a new incident — *admin, manager*
+- `PUT /api/incidents/:id` - Update an incident — *admin, manager*
+- `DELETE /api/incidents/:id` - Delete an incident — *admin only*
 
 ### Statistics
-- `GET /api/incidents/stats/summary` - Get incident statistics
+- `GET /api/incidents/stats/summary` - Get incident statistics — *all roles*
 
 ### Health Check
-- `GET /api/health` - API health check
+- `GET /api/health` - API health check (no auth required)
 
 ## Usage
+
+### Signing In
+1. Open the app at `http://localhost:3000`
+2. Enter your username and password (demo accounts are shown on the login page)
+3. Your role badge will appear in the dashboard header after login
 
 ### Viewing Incidents
 - The dashboard displays all incidents in a table format
@@ -134,7 +176,7 @@ npm run install-all
   - **Assignee Search**: Search for incidents by assignee name
 - Click "Clear Filters" to reset all filters
 
-### Creating an Incident
+### Creating an Incident *(admin, manager)*
 1. Click the "Create New Incident" button
 2. Fill in the incident details:
    - Title (required)
@@ -143,13 +185,13 @@ npm run install-all
    - Assignee
 3. Click "Create" to save
 
-### Editing an Incident
+### Editing an Incident *(admin, manager)*
 1. Click the "Edit" button on an incident row, or
 2. Click an incident to view details, then click "Edit"
 3. Update the fields
 4. Click "Save Changes"
 
-### Deleting an Incident
+### Deleting an Incident *(admin only)*
 1. Click an incident to view details
 2. Click the "Delete" button
 3. Confirm the deletion
@@ -189,6 +231,8 @@ The backend currently uses in-memory storage. To add database support:
 
 ### Backend
 - **Express.js** - Web framework
+- **jsonwebtoken** - JWT creation and verification
+- **bcryptjs** - Password hashing
 - **CORS** - Cross-origin resource sharing
 - **body-parser** - Request body parsing
 - **uuid** - Unique ID generation
@@ -200,7 +244,6 @@ The backend currently uses in-memory storage. To add database support:
 
 ## Future Enhancements
 
-- User authentication and authorization
 - Real-time updates using WebSockets
 - File attachments for incidents
 - Comment threads on incidents
@@ -209,6 +252,7 @@ The backend currently uses in-memory storage. To add database support:
 - Export data to CSV/PDF
 - Dark mode support
 - Incident history and audit log
+- Persistent database storage
 
 ## License
 

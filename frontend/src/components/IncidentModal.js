@@ -133,26 +133,30 @@ const IncidentModal = ({ incident, mode, onClose, onSave, onDelete }) => {
           <div className="modal-footer">
             {mode === 'view' && (
               <>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    onClose();
-                    setTimeout(() => {
-                      const editButton = document.querySelector(`[data-incident-id="${incident.id}"]`);
-                      if (editButton) editButton.click();
-                    }, 100);
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => onDelete(incident.id)}
-                >
-                  Delete
-                </button>
+                {onDelete && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        onClose();
+                        setTimeout(() => {
+                          const editButton = document.querySelector(`[data-incident-id="${incident.id}"]`);
+                          if (editButton) editButton.click();
+                        }, 100);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => onDelete(incident.id)}
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </>
             )}
             
