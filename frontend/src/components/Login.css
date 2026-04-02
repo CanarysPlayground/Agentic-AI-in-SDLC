@@ -1,0 +1,159 @@
+.login-overlay {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.4rem;
+}
+
+.login-header p {
+  color: #718096;
+  font-size: 0.95rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.2rem;
+}
+
+.login-form label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin-bottom: 0.4rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.btn-full {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  transition: opacity 0.2s;
+}
+
+.btn-full:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.login-error {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+  padding: 0.65rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* Demo accounts table */
+.login-demo-accounts {
+  margin-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.2rem;
+}
+
+.demo-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.7rem;
+}
+
+.demo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.demo-table th {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  color: #718096;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.demo-table td {
+  padding: 0.4rem 0.5rem;
+  color: #4a5568;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.demo-table code {
+  background: #edf2f7;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.82rem;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role-admin {
+  background: #fed7e2;
+  color: #97266d;
+}
+
+.role-manager {
+  background: #bee3f8;
+  color: #2a69ac;
+}
+
+.role-viewer {
+  background: #c6f6d5;
+  color: #276749;
+}

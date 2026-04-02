@@ -6,7 +6,11 @@ import IncidentModal from './IncidentModal';
 import StatsPanel from './StatsPanel';
 import './Dashboard.css';
 
-const Dashboard = () => {
+const ROLE_LABELS = { admin: 'Admin', manager: 'Manager', viewer: 'Viewer' };
+const ROLE_COLORS = { admin: '#97266d', manager: '#2a69ac', viewer: '#276749' };
+const ROLE_BG = { admin: '#fed7e2', manager: '#bee3f8', viewer: '#c6f6d5' };
+
+const Dashboard = ({ currentUser, onLogout }) => {
   const [incidents, setIncidents] = useState([]);
   const [stats, setStats] = useState(null);
   const [filters, setFilters] = useState({
@@ -19,6 +23,11 @@ const Dashboard = () => {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('view'); // 'view', 'edit', 'create'
+
+  // Role capability helpers
+  const canCreate = currentUser && ['admin', 'manager'].includes(currentUser.role);
+  const canEdit   = currentUser && ['admin', 'manager'].includes(currentUser.role);
+  const canDelete = currentUser && currentUser.role === 'admin';
 
   const loadIncidents = async () => {
     try {
@@ -60,12 +69,14 @@ const Dashboard = () => {
   };
 
   const handleEditIncident = (incident) => {
+    if (!canEdit) return;
     setSelectedIncident(incident);
     setModalMode('edit');
     setIsModalOpen(true);
   };
 
   const handleCreateIncident = () => {
+    if (!canCreate) return;
     setSelectedIncident(null);
     setModalMode('create');
     setIsModalOpen(true);
@@ -87,6 +98,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteIncident = async (id) => {
+    if (!canDelete) return;
     if (window.confirm('Are you sure you want to delete this incident?')) {
       try {
         await deleteIncident(id);
@@ -108,9 +120,27 @@ const Dashboard = () => {
     <div className="dashboard">
       <header className="dashboard-header">
         <h1>Incident Management Dashboard</h1>
-        <button className="btn btn-primary" onClick={handleCreateIncident}>
-          Create New Incident
-        </button>
+        <div className="header-actions">
+          {currentUser && (
+            <div className="user-info">
+              <span className="user-name">{currentUser.name}</span>
+              <span
+                className="user-role-badge"
+                style={{ background: ROLE_BG[currentUser.role], color: ROLE_COLORS[currentUser.role] }}
+              >
+                {ROLE_LABELS[currentUser.role] || currentUser.role}
+              </span>
+              <button className="btn btn-secondary btn-sm" onClick={onLogout}>
+                Sign Out
+              </button>
+            </div>
+          )}
+          {canCreate && (
+            <button className="btn btn-primary" onClick={handleCreateIncident}>
+              Create New Incident
+            </button>
+          )}
+        </div>
       </header>
 
       {stats && <StatsPanel stats={stats} />}
@@ -129,7 +159,7 @@ const Dashboard = () => {
           <IncidentList
             incidents={incidents}
             onIncidentClick={handleIncidentClick}
-            onEditIncident={handleEditIncident}
+            onEditIncident={canEdit ? handleEditIncident : null}
           />
         )}
       </div>
@@ -140,7 +170,7 @@ const Dashboard = () => {
           mode={modalMode}
           onClose={handleCloseModal}
           onSave={handleSaveIncident}
-          onDelete={handleDeleteIncident}
+          onDelete={canDelete ? handleDeleteIncident : null}
         />
       )}
     </div>

@@ -2,15 +2,98 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'incident-mgmt-secret-key';
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// In-memory database (for demo purposes)
+// ─── RBAC Roles ──────────────────────────────────────────────────────────────
+// admin   – full CRUD + user management
+// manager – create, read, update (no delete)
+// viewer  – read-only
+
+// ─── In-memory users store ───────────────────────────────────────────────────
+const SALT_ROUNDS = 10;
+const users = [
+  {
+    id: uuidv4(),
+    username: process.env.ADMIN_USERNAME || 'admin',
+    password: bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', SALT_ROUNDS),
+    role: 'admin',
+    name: 'Administrator'
+  },
+  {
+    id: uuidv4(),
+    username: 'manager1',
+    password: bcrypt.hashSync('manager123', SALT_ROUNDS),
+    role: 'manager',
+    name: 'Jane Manager'
+  },
+  {
+    id: uuidv4(),
+    username: 'viewer1',
+    password: bcrypt.hashSync('viewer123', SALT_ROUNDS),
+    role: 'viewer',
+    name: 'Bob Viewer'
+  }
+];
+
+// ─── Auth middleware ──────────────────────────────────────────────────────────
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// ─── Role authorization middleware factory ────────────────────────────────────
+const authorize = (...roles) => (req, res, next) => {
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ error: 'Insufficient permissions' });
+  }
+  next();
+};
+
+// ─── Auth routes ─────────────────────────────────────────────────────────────
+
+// POST /api/auth/login
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+  const user = users.find(u => u.username === username);
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const token = jwt.sign(
+    { id: user.id, username: user.username, role: user.role, name: user.name },
+    JWT_SECRET,
+    { expiresIn: '8h' }
+  );
+  res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name } });
+});
+
+// GET /api/auth/me  – returns current user info
+app.get('/api/auth/me', authenticate, (req, res) => {
+  res.json({ id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name });
+});
+
+// ─── In-memory incidents store ────────────────────────────────────────────────
 let incidents = [
   {
     id: uuidv4(),
@@ -64,8 +147,8 @@ let incidents = [
   }
 ];
 
-// GET all incidents with filtering
-app.get('/api/incidents', (req, res) => {
+// GET all incidents with filtering  (all authenticated roles)
+app.get('/api/incidents', authenticate, (req, res) => {
   let filteredIncidents = [...incidents];
   
   // Filter by status
@@ -95,8 +178,8 @@ app.get('/api/incidents', (req, res) => {
   res.json(filteredIncidents);
 });
 
-// GET single incident by ID
-app.get('/api/incidents/:id', (req, res) => {
+// GET single incident by ID  (all authenticated roles)
+app.get('/api/incidents/:id', authenticate, (req, res) => {
   const incident = incidents.find(i => i.id === req.params.id);
   if (!incident) {
     return res.status(404).json({ error: 'Incident not found' });
@@ -104,8 +187,8 @@ app.get('/api/incidents/:id', (req, res) => {
   res.json(incident);
 });
 
-// POST create new incident
-app.post('/api/incidents', (req, res) => {
+// POST create new incident  (admin, manager)
+app.post('/api/incidents', authenticate, authorize('admin', 'manager'), (req, res) => {
   const { title, description, priority, assignee } = req.body;
   
   if (!title || !description) {
@@ -127,8 +210,8 @@ app.post('/api/incidents', (req, res) => {
   res.status(201).json(newIncident);
 });
 
-// PUT update incident
-app.put('/api/incidents/:id', (req, res) => {
+// PUT update incident  (admin, manager)
+app.put('/api/incidents/:id', authenticate, authorize('admin', 'manager'), (req, res) => {
   const index = incidents.findIndex(i => i.id === req.params.id);
   
   if (index === -1) {
@@ -147,8 +230,8 @@ app.put('/api/incidents/:id', (req, res) => {
   res.json(updatedIncident);
 });
 
-// DELETE incident
-app.delete('/api/incidents/:id', (req, res) => {
+// DELETE incident  (admin only)
+app.delete('/api/incidents/:id', authenticate, authorize('admin'), (req, res) => {
   const index = incidents.findIndex(i => i.id === req.params.id);
   
   if (index === -1) {
@@ -159,8 +242,8 @@ app.delete('/api/incidents/:id', (req, res) => {
   res.json({ message: 'Incident deleted successfully' });
 });
 
-// GET incident statistics
-app.get('/api/incidents/stats/summary', (req, res) => {
+// GET incident statistics  (all authenticated roles)
+app.get('/api/incidents/stats/summary', authenticate, (req, res) => {
   const stats = {
     total: incidents.length,
     byStatus: {

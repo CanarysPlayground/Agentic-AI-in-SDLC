@@ -49,15 +49,17 @@ const IncidentList = ({ incidents, onIncidentClick, onEditIncident }) => {
               <td>{incident.assignee}</td>
               <td className="incident-date">{formatDate(incident.createdAt)}</td>
               <td className="incident-actions">
-                <button
-                  className="btn btn-sm btn-edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditIncident(incident);
-                  }}
-                >
-                  Edit
-                </button>
+                {onEditIncident && (
+                  <button
+                    className="btn btn-sm btn-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditIncident(incident);
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
               </td>
             </tr>
           ))}
