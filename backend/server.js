@@ -4,14 +4,38 @@ const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'incident-mgmt-secret-key';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('WARNING: JWT_SECRET environment variable is not set. Set it before running in production.');
+  process.exit(1);
+}
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// ─── Rate limiters ────────────────────────────────────────────────────────────
+// Strict limiter for auth endpoints (brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+// General API limiter for incident endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
 
 // ─── RBAC Roles ──────────────────────────────────────────────────────────────
 // admin   – full CRUD + user management
@@ -19,6 +43,8 @@ app.use(bodyParser.json());
 // viewer  – read-only
 
 // ─── In-memory users store ───────────────────────────────────────────────────
+// Passwords are hashed once at startup using hashSync; this is intentional for
+// static seed data and does not happen per-request.
 const SALT_ROUNDS = 10;
 const users = [
   {
@@ -71,7 +97,7 @@ const authorize = (...roles) => (req, res, next) => {
 // ─── Auth routes ─────────────────────────────────────────────────────────────
 
 // POST /api/auth/login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authLimiter, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
@@ -89,7 +115,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // GET /api/auth/me  – returns current user info
-app.get('/api/auth/me', authenticate, (req, res) => {
+app.get('/api/auth/me', authLimiter, authenticate, (req, res) => {
   res.json({ id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name });
 });
 
@@ -148,7 +174,7 @@ let incidents = [
 ];
 
 // GET all incidents with filtering  (all authenticated roles)
-app.get('/api/incidents', authenticate, (req, res) => {
+app.get('/api/incidents', apiLimiter, authenticate, (req, res) => {
   let filteredIncidents = [...incidents];
   
   // Filter by status
@@ -179,7 +205,7 @@ app.get('/api/incidents', authenticate, (req, res) => {
 });
 
 // GET single incident by ID  (all authenticated roles)
-app.get('/api/incidents/:id', authenticate, (req, res) => {
+app.get('/api/incidents/:id', apiLimiter, authenticate, (req, res) => {
   const incident = incidents.find(i => i.id === req.params.id);
   if (!incident) {
     return res.status(404).json({ error: 'Incident not found' });
@@ -188,7 +214,7 @@ app.get('/api/incidents/:id', authenticate, (req, res) => {
 });
 
 // POST create new incident  (admin, manager)
-app.post('/api/incidents', authenticate, authorize('admin', 'manager'), (req, res) => {
+app.post('/api/incidents', apiLimiter, authenticate, authorize('admin', 'manager'), (req, res) => {
   const { title, description, priority, assignee } = req.body;
   
   if (!title || !description) {
@@ -211,7 +237,7 @@ app.post('/api/incidents', authenticate, authorize('admin', 'manager'), (req, re
 });
 
 // PUT update incident  (admin, manager)
-app.put('/api/incidents/:id', authenticate, authorize('admin', 'manager'), (req, res) => {
+app.put('/api/incidents/:id', apiLimiter, authenticate, authorize('admin', 'manager'), (req, res) => {
   const index = incidents.findIndex(i => i.id === req.params.id);
   
   if (index === -1) {
@@ -231,7 +257,7 @@ app.put('/api/incidents/:id', authenticate, authorize('admin', 'manager'), (req,
 });
 
 // DELETE incident  (admin only)
-app.delete('/api/incidents/:id', authenticate, authorize('admin'), (req, res) => {
+app.delete('/api/incidents/:id', apiLimiter, authenticate, authorize('admin'), (req, res) => {
   const index = incidents.findIndex(i => i.id === req.params.id);
   
   if (index === -1) {
@@ -243,7 +269,7 @@ app.delete('/api/incidents/:id', authenticate, authorize('admin'), (req, res) =>
 });
 
 // GET incident statistics  (all authenticated roles)
-app.get('/api/incidents/stats/summary', authenticate, (req, res) => {
+app.get('/api/incidents/stats/summary', apiLimiter, authenticate, (req, res) => {
   const stats = {
     total: incidents.length,
     byStatus: {
